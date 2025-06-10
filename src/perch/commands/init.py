@@ -85,9 +85,11 @@ def create_directories(base_path: Path, integration: str | None = None):
         ]
 
     for d in dirs:
+        typer.echo(f"Creating directory: {d}") # Added typer.echo
         d.mkdir(parents=True, exist_ok=True)
 
     # Create core/data/tool.py
+    typer.echo("Creating core/data/tool.py...") # Added typer.echo
     (base_path / "core" / "data" / "tool.py").write_text("""\
 from dataclasses import dataclass
 from typing import Optional, Any
@@ -99,6 +101,7 @@ class ToolResponse:
     data: Optional[Any] = None
 """)
 
+    typer.echo("Creating main.py...") # Added typer.echo
     (base_path / "main.py").write_text(f"""\
 from core.server import MCPServer
 
@@ -107,6 +110,7 @@ if __name__ == "__main__":
     server.run()
 """)
 
+    typer.echo("Creating core/server.py...") # Added typer.echo
     (base_path / "core/server.py").write_text("""\
 import importlib
 import inspect
@@ -321,15 +325,18 @@ def init_current_project(
                 base_path / f"integrations/{integration}",
             ]
         for d in dirs:
+            typer.echo(f"Creating directory: {d}") # Added typer.echo
             d.mkdir(parents=True, exist_ok=True)
 
     # Create main.py based on normal_project flag
     if normal_project:
+        typer.echo("Creating main.py...") # Added typer.echo
         (base_path / "main.py").write_text("""\
 # This is a normal Perch project.
 # You can add your Python code here.
 """)
     else:
+        typer.echo("Creating main.py...") # Added typer.echo
         (base_path / "main.py").write_text(f"""\
 from core.server import MCPServer
 
@@ -340,6 +347,7 @@ if __name__ == "__main__":
 
     # Create core/server.py only if not a normal project
     if not normal_project:
+        typer.echo("Creating core/server.py...") # Added typer.echo
         (base_path / "core/server.py").write_text("""\
 import importlib
 import inspect
@@ -469,18 +477,23 @@ integrations:
         gitignore_path.write_text(gitignore_content)
 
     # Run uv commands in the current directory
-    subprocess.run(["uv", "init", "."], check=False)
+    typer.echo("\n📦 Initializing Python environment and installing dependencies...")
+    subprocess.run(["uv", "init", "."], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     if not normal_project:
-        subprocess.run(["uv", "add", "mcp[cli]"], check=False)
-        subprocess.run(["uv", "add", "pydantic"], check=False)
-        subprocess.run(["uv", "add", "pyyaml"], check=False) # Add pyyaml dependency
+        subprocess.run(["uv", "add", "mcp[cli]"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["uv", "add", "pydantic"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["uv", "add", "pyyaml"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # Add pyyaml dependency
+        subprocess.run(["uv", "add", "PyYAML"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # Add PyYAML dependency for YAML handling
     else:
-        # For normal projects, only add basic dependencies if needed
         pass # No specific dependencies mentioned for normal projects, so keep it minimal
+    typer.secho("✅ Packages initialized!", fg=typer.colors.GREEN)
 
-    typer.secho("\nProject initialized!", fg=typer.colors.GREEN)
-    typer.echo("  uv venv activate")
-    typer.echo("  python main.py")
+    typer.secho("\n🎉 Project initialized successfully!", fg=typer.colors.GREEN)
+    typer.echo("\nNext steps:")
+    typer.echo("  1. Activate the virtual environment:")
+    typer.echo("     source .venv/bin/activate") # Modified activation instruction
+    typer.echo("  2. Run the project:")
+    typer.echo("     python main.py")
 
     # Handle README.md generation
     readme_path = base_path / "README.md"
@@ -560,15 +573,18 @@ def create_project(
                 base_path / f"integrations/{integration}",
             ]
         for d in dirs:
+            typer.echo(f"Creating directory: {d}") # Added typer.echo
             d.mkdir(parents=True, exist_ok=True)
 
     # Create main.py based on normal_project flag
     if normal_project:
+        typer.echo("Creating main.py...") # Added typer.echo
         (base_path / "main.py").write_text("""\
 # This is a normal Perch project.
 # You can add your Python code here.
 """)
     else:
+        typer.echo("Creating main.py...") # Added typer.echo
         (base_path / "main.py").write_text(f"""\
 from core.server import MCPServer
 
@@ -579,6 +595,7 @@ if __name__ == "__main__":
 
     # Create core/server.py only if not a normal project
     if not normal_project:
+        typer.echo("Creating core/server.py...") # Added typer.echo
         (base_path / "core/server.py").write_text("""\
 import importlib
 import inspect
@@ -702,14 +719,17 @@ integrations:
 
     # Change directory and run uv commands in the new project directory
     os.chdir(base_path)
-    subprocess.run(["uv", "init", "."], check=False)
+    typer.echo("📦 Initializing Python environment and installing dependencies...") # Added typer.echo
+    subprocess.run(["uv", "init", "."], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     if not normal_project:
-        subprocess.run(["uv", "add", "mcp[cli]"], check=False)
-        subprocess.run(["uv", "add", "pydantic"], check=False)
-        subprocess.run(["uv", "add", "pyyaml"], check=False) # Add pyyaml dependency
+        subprocess.run(["uv", "add", "mcp[cli]"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["uv", "add", "pydantic"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["uv", "add", "pyyaml"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["uv", "add", "PyYAML"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     else:
         # For normal projects, only add basic dependencies if needed
         pass # No specific dependencies mentioned for normal projects, so keep it minimal
+    typer.secho("✅ Packages initialized!", fg=typer.colors.GREEN) # Added typer.secho
 
     # Handle README.md generation
     readme_path = base_path / "README.md"
@@ -721,7 +741,13 @@ integrations:
         typer.secho("📄 README.md generated successfully.", fg=typer.colors.BLUE)
 
     typer.secho("\n🎉 Perch project created! You're off to a flying start!", fg=typer.colors.GREEN)
-    typer.echo(f"\n\nNext steps:\n\n➡️  cd {final_project_name}\n➡️  uv venv activate\n➡️  python main.py\n")
+    typer.echo(f"\n\n🌳 Next steps 🌳:\n\n➡️  cd {final_project_name}")
+    typer.echo(f"➡️  Initialize the virtual environment:")
+    typer.echo("    uv venv")
+    typer.echo("➡️  Activate the virtual environment:")
+    typer.echo("    source .venv/bin/activate") # Modified activation instruction
+    typer.echo("➡️  Run the project:")
+    typer.echo("    python main.py\n")
 
     # Log initial integration if provided
     if integration:
