@@ -41,22 +41,52 @@ def _schema_exists(integration: str, entity: str) -> bool:
 def _create_tool_file(integration: str, entity: str):
     tool_file = Path(f"interfaces/tools/{integration}/{entity}.py")
     tool_file.parent.mkdir(parents=True, exist_ok=True)
-    tool_file.write_text(f"""\
+    tool_file.write_text(f'''\
 from core.data.tool import ToolResponse
+from pydantic import Field
+from schemas.{integration}.{entity} import {entity.capitalize()}InputSchema, {entity.capitalize()}ResponseSchema
+from services.{integration}.{entity} import create_{entity}
 
-def create_{entity}_tool() -> ToolResponse:
-    return ToolResponse(status="success", message="{entity} created")
-""")
+# All tool functions must end with `_tool` to be registered.
+def create_{entity}_tool(
+    # Note: You can directly use `{entity.capitalize()}InputSchema` as a parameter schema here.
+    # However, when using MCP debugging tools like MCP Inspector, the individual fields
+    # (e.g. `sample1`, `sample2`) may not display properly. Defining them explicitly ensures they show up.
+    # Either way is correct, if updating or stuff that needs json, It is recommend to use the schema
+    sample1: str = Field(..., description="The sample1 of the {entity}."),
+    sample2: str = Field(..., description="The sample2 of the {entity}.")
+) -> ToolResponse:
+    """
+    Creates a new {entity} with the provided sample1 and sample2.
+    """
+    # Calling to service
+    {entity} = create_{entity}({entity.capitalize()}InputSchema.model_validate({{"sample1": sample1, "sample2": sample2}}))
+    if not {entity}:
+        return ToolResponse(status="error", message="{entity.capitalize()} creation failed.")
+
+    return ToolResponse(
+        status="success",
+        message="{entity.capitalize()} created successfully",
+        data={entity.capitalize()}ResponseSchema.model_validate({entity})
+    )
+''')
     typer.echo(f"Created: {tool_file}")
 
 def _create_service_file(integration: str, entity: str):
     service_file = Path(f"services/{integration}/{entity}.py")
     service_file.parent.mkdir(parents=True, exist_ok=True)
     service_file.write_text(f"""\
-def create_{entity}():
-    # This is a placeholder for your service logic.
-    # It should interact with the client.
-    pass
+from schemas.{integration}.{entity} import {entity.capitalize()}InputSchema, {entity.capitalize()}ResponseSchema
+import uuid
+import datetime
+
+def create_{entity}(input_data: {entity.capitalize()}InputSchema) -> {entity.capitalize()}ResponseSchema:
+    # Example Process
+    item = {{
+        "sample1": input_data.sample1,
+        "sample2": input_data.sample2,
+    }}
+    return {entity.capitalize()}ResponseSchema(**item)
 """)
     typer.echo(f"Created: {service_file}")
 
@@ -65,38 +95,29 @@ def _create_schema_file(integration: str, entity: str):
     schema_file.parent.mkdir(parents=True, exist_ok=True)
     schema_file.write_text(f"""\
 from pydantic import BaseModel
+from typing import Optional
 
 class {entity.capitalize()}InputSchema(BaseModel):
-    pass
+    sample1: str
+    sample2: str
 
 class {entity.capitalize()}ResponseSchema(BaseModel):
-    pass
+    sample1: str
+    sample2: str
+    # Add other fields as necessary, e.g., id, created_at
 """)
     typer.echo(f"Created: {schema_file}")
 
-@app.command("integration")
-def add_integration(name: str):
-    """
-    Adds a new integration by creating its directory structure.
-    """
-    _check_perch_project()
-    if _integration_exists(name):
-        typer.secho(f"Error: Integration '{name}' already exists.", fg=typer.colors.RED)
-        raise typer.Exit(code=1)
+def _create_integration_files(name: str):
+    # Create integration directory structure
+    Path(f"integrations/{name}").mkdir(parents=True, exist_ok=True)
+    Path(f"interfaces/tools/{name}").mkdir(parents=True, exist_ok=True)
+    Path(f"interfaces/resources/{name}").mkdir(parents=True, exist_ok=True)
+    Path(f"schemas/{name}").mkdir(parents=True, exist_ok=True)
+    Path(f"services/{name}").mkdir(parents=True, exist_ok=True)
+    typer.echo(f"Created integration directory structure for: {name}")
 
-    paths = [
-        f"integrations/{name}",
-        f"interfaces/tools/{name}",
-        f"interfaces/resources/{name}",
-        f"schemas/{name}",
-        f"services/{name}",
-    ]
-
-    for path in paths:
-        Path(path).mkdir(parents=True, exist_ok=True)
-        typer.echo(f"Created: {path}")
-
-    # Create client.py for the new integration
+    # Create client.py
     client_file_path = Path(f"integrations/{name}/client.py")
     client_class_name = f"{name.capitalize()}Client"
     client_file_content = f"""\
@@ -127,15 +148,26 @@ class {client_class_name}:
                 yaml.dump(perch_data, f, sort_keys=False)
             typer.echo(f"Updated perch.lock with integration: {name}")
 
+@app.command("integration")
+def add_integration(
+    name: str = typer.Argument(..., help="The name of the integration to add.")
+):
+    """
+    Adds a new integration to the Perch project.
+    """
+    _check_perch_project()
+    if _integration_exists(name):
+        typer.secho(f"Error: Integration '{name}' already exists.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+    _create_integration_files(name)
+
 @app.command("tool")
 def add_tool(
     integration: str,
-    entity: str,
-    all_layers: bool = typer.Option(False, "--all", "-a", help="Also create service and schema files. Consider using 'perch add all' for this.")
+    entity: str
 ):
     """
     Adds a new tool file for a given integration and entity.
-    Optionally creates service and schema files.
     """
     _check_perch_project()
     if not _integration_exists(integration):
@@ -145,15 +177,6 @@ def add_tool(
         typer.secho(f"Error: Tool '{entity}' already exists for integration '{integration}'.", fg=typer.colors.RED)
         raise typer.Exit(code=1)
     _create_tool_file(integration, entity)
-    if all_layers:
-        if _service_exists(integration, entity):
-            typer.secho(f"Error: Service '{entity}' already exists for integration '{integration}'.", fg=typer.colors.RED)
-            raise typer.Exit(code=1)
-        if _schema_exists(integration, entity):
-            typer.secho(f"Error: Schema '{entity}' already exists for integration '{integration}'.", fg=typer.colors.RED)
-            raise typer.Exit(code=1)
-        _create_service_file(integration, entity)
-        _create_schema_file(integration, entity)
 
 @app.command("service")
 def add_service(
@@ -202,18 +225,19 @@ def add_all(
         typer.secho(f"Error: Integration '{integration}' not exists.", fg=typer.colors.RED)
         raise typer.Exit(code=1)
     
-    # Check if any of the layers already exist
-    if _tool_exists(integration, entity):
-        typer.secho(f"Error: Tool '{entity}' already exists for integration '{integration}'.", fg=typer.colors.RED)
-        raise typer.Exit(code=1)
-    if _service_exists(integration, entity):
-        typer.secho(f"Error: Service '{entity}' already exists for integration '{integration}'.", fg=typer.colors.RED)
-        raise typer.Exit(code=1)
-    if _schema_exists(integration, entity):
-        typer.secho(f"Error: Schema '{entity}' already exists for integration '{integration}'.", fg=typer.colors.RED)
-        raise typer.Exit(code=1)
-
     typer.echo(f"Adding all layers for integration '{integration}' and entity '{entity}'...")
-    _create_tool_file(integration, entity)
-    _create_service_file(integration, entity)
-    _create_schema_file(integration, entity)
+    
+    if not _tool_exists(integration, entity):
+        _create_tool_file(integration, entity)
+    else:
+        typer.secho(f"Skipping: Tool '{entity}' already exists for integration '{integration}'.", fg=typer.colors.YELLOW)
+
+    if not _service_exists(integration, entity):
+        _create_service_file(integration, entity)
+    else:
+        typer.secho(f"Skipping: Service '{entity}' already exists for integration '{integration}'.", fg=typer.colors.YELLOW)
+
+    if not _schema_exists(integration, entity):
+        _create_schema_file(integration, entity)
+    else:
+        typer.secho(f"Skipping: Schema '{entity}' already exists for integration '{integration}'.", fg=typer.colors.YELLOW)

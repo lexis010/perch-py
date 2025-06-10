@@ -528,17 +528,19 @@ def create_project(
 
     base_path = Path.cwd() / final_project_name
 
-    # Create the base project directory first
-    base_path.mkdir(parents=True, exist_ok=True)
-
-    if (base_path / "perch.lock").exists() or (base_path / "pyproject.toml").exists():
-        typer.secho(f"Error: Project is already initialized in '{base_path}'. Aborting.", fg=typer.colors.RED)
-        raise typer.Exit(code=1)
-    else:
-        # If directory exists but is not a project, still allow creation
-        typer.echo(f"Warning: Directory '{final_project_name}' already exists but is not a Perch project. Proceeding with initialization.")
+    # Check if the directory exists and is already a Perch project
+    if base_path.exists():
+        if (base_path / "perch.lock").exists() or (base_path / "pyproject.toml").exists():
+            typer.secho(f"❌ Error: Project is already initialized in '{base_path}'. Aborting.", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+        else:
+            # Directory exists but is not a Perch project, proceed with initialization
+            typer.echo(f"⚠️ Warning: Directory '{final_project_name}' already exists but is not a Perch project. Proceeding with initialization.")
     
-    typer.echo(f"Creating new project: {final_project_name}")
+    # Create the base project directory (if it doesn't exist or if it's an empty/non-Perch existing dir)
+    base_path.mkdir(parents=True, exist_ok=True)
+    
+    typer.echo(f"✨ Creating new project: {final_project_name}")
 
     # Create directories based on normal_project flag
     if not normal_project:
@@ -709,19 +711,21 @@ integrations:
         # For normal projects, only add basic dependencies if needed
         pass # No specific dependencies mentioned for normal projects, so keep it minimal
 
-    typer.secho("\nProject created!", fg=typer.colors.GREEN)
-    typer.echo(f"\nNext steps:\n  cd {final_project_name}")
-    typer.echo("  uv venv activate")
-    typer.echo("  python main.py")
-
     # Handle README.md generation
     readme_path = base_path / "README.md"
     if readme_path.exists() and readme_path.read_text().strip():
-        typer.secho("README.md already exists and has content. Skipping generation.", fg=typer.colors.YELLOW)
+        typer.secho("⚠️ README.md already exists and has content. Skipping generation.", fg=typer.colors.YELLOW)
     else:
         readme_content = _generate_readme_content(final_project_name, normal_project)
         readme_path.write_text(readme_content)
-        typer.secho("README.md generated successfully.", fg=typer.colors.BLUE)
+        typer.secho("📄 README.md generated successfully.", fg=typer.colors.BLUE)
+
+    typer.secho("\n🎉 Perch project created! You're off to a flying start!", fg=typer.colors.GREEN)
+    typer.echo(f"\n\nNext steps:\n\n➡️  cd {final_project_name}\n➡️  uv venv activate\n➡️  python main.py\n")
+
+    # Log initial integration if provided
+    if integration:
+        typer.echo(f"\n🔗 Initial integration '{integration}' added to project.\n")
 
     # Change back to the original directory after creating the project
     os.chdir("..")

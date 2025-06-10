@@ -1,6 +1,6 @@
 [project]
 name = "perch-py"
-version = "0.1.1"
+version = "0.1.2"
 description = "Perch is a developer-friendly CLI tool for scaffolding MCP HexLayer Architecture projects using clean structure and modular design."
 readme = "README.md"
 authors = [
