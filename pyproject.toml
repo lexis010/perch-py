@@ -26,22 +26,6 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/perch"]
 
-[tool.uv.workspace]
-members = [
-    "tite-mcp-server",
-    "tited-mcp-server",
-    "titedd-mcp-server",
-    "titeddd-mcp-server",
-    "titeddddd-mcp-server",
-    "titeddddde-mcp-server",
-    "titeddddde3-mcp-server",
-    "titeddddde3w-mcp-server",
-    "titeddddde3wd-mcp-server",
-    "titeddddde3w2d-mcp-server",
-    "timely-mcp-server",
-    "itte-mcp-server",
-    "toolshit-mcp-server",
-]
 
 [project.urls]
 Homepage = "https://github.com/danielremoquillo/perch-py"
