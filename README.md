@@ -48,7 +48,7 @@ perch init --integration github
 To initialize a project where the `-mcp-server` suffix is not enforced on the project name:
 
 ```bash
-perch init --normal
+perch init --normal # Note: Not Recommended
 ```
 
 ### Create New Project (`perch create`)
@@ -68,7 +68,7 @@ perch create my-mcp-server --integration github
 To create a project where the `-mcp-server` suffix is not enforced on the project name:
 
 ```bash
-perch create my-normal-project --normal
+perch create my-normal-project --normal # Note: Not Recommended
 ```
 
 ### After Project Initialization/Creation

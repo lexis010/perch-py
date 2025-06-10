@@ -477,15 +477,26 @@ integrations:
         gitignore_path.write_text(gitignore_content)
 
     # Run uv commands in the current directory
-    typer.echo("\n📦 Initializing Python environment and installing dependencies...")
+    typer.echo("\n\n📦 Initializing Python environment and installing dependencies...")
+    # `uv init .` initializes the project and creates the virtual environment.
+    # `uv venv` is called explicitly as requested, though it might be redundant after `uv init .`.
     subprocess.run(["uv", "init", "."], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["uv", "venv"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # The `source .venv/bin/activate` command is a shell built-in and cannot directly activate
+    # the environment for the current Python script's process or subsequent `subprocess.run` calls
+    # in the same way it does for a user's shell. `uv` commands automatically use the local
+    # `.venv` for dependency management, so explicit activation within the script is not needed
+    # for `uv add` to function correctly.
     if not normal_project:
         subprocess.run(["uv", "add", "mcp[cli]"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(["uv", "add", "pydantic"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(["uv", "add", "pyyaml"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # Add pyyaml dependency
         subprocess.run(["uv", "add", "PyYAML"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # Add PyYAML dependency for YAML handling
+        subprocess.run(["uv", "add", "perch-py"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
     else:
-        pass # No specific dependencies mentioned for normal projects, so keep it minimal
+        # Add perch-py as a dependency for normal projects
+        subprocess.run(["uv", "add", "perch-py"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     typer.secho("✅ Packages initialized!", fg=typer.colors.GREEN)
 
     typer.secho("\n🎉 Project initialized successfully!", fg=typer.colors.GREEN)
@@ -720,15 +731,23 @@ integrations:
     # Change directory and run uv commands in the new project directory
     os.chdir(base_path)
     typer.echo("📦 Initializing Python environment and installing dependencies...") # Added typer.echo
+    # `uv init .` initializes the project and creates the virtual environment.
+    # `uv venv` is called explicitly as requested, though it might be redundant after `uv init .`.
     subprocess.run(["uv", "init", "."], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["uv", "venv"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # The `source .venv/bin/activate` command is a shell built-in and cannot directly activate
+    # the environment for the current Python script's process or subsequent `subprocess.run` calls
+    # in the same way it does for a user's shell. `uv` commands automatically use the local
+    # `.venv` for dependency management, so explicit activation within the script is not needed
+    # for `uv add` to function correctly.
     if not normal_project:
         subprocess.run(["uv", "add", "mcp[cli]"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(["uv", "add", "pydantic"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(["uv", "add", "pyyaml"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(["uv", "add", "PyYAML"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     else:
-        # For normal projects, only add basic dependencies if needed
-        pass # No specific dependencies mentioned for normal projects, so keep it minimal
+        # For normal projects, add perch-py as a dependency
+        subprocess.run(["uv", "add", "perch-py"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     typer.secho("✅ Packages initialized!", fg=typer.colors.GREEN) # Added typer.secho
 
     # Handle README.md generation
@@ -742,8 +761,6 @@ integrations:
 
     typer.secho("\n🎉 Perch project created! You're off to a flying start!", fg=typer.colors.GREEN)
     typer.echo(f"\n\n🌳 Next steps 🌳:\n\n➡️  cd {final_project_name}")
-    typer.echo(f"➡️  Initialize the virtual environment:")
-    typer.echo("    uv venv")
     typer.echo("➡️  Activate the virtual environment:")
     typer.echo("    source .venv/bin/activate") # Modified activation instruction
     typer.echo("➡️  Run the project:")
