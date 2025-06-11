@@ -1,6 +1,6 @@
 # Perch - MCP HexLayer Scaffolding CLI
 
-Perch is a developer-friendly command-line tool for scaffolding and managing [MCP HexLayer Architecture](https://github.com/modelcontextprotocol/python-sdk) server projects.
+Perch is a developer-friendly command-line tool for scaffolding and managing [MCP HexLayer Architecture]([https://github.com/danielremoquillo/perch-mcp-hex-layer-architecture]) server projects.
 
 It helps you build modular, maintainable MCP servers using clean structure and naming conventions based on primarily on CGUDL (Create, Get, Update, Delete, List), but you can use ACTION type naming conventions.
 
