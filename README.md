@@ -240,7 +240,7 @@ Perch is designed to facilitate the development of MCP HexLayer Architecture ser
 
 ### Detailed Architecture
 
-For a comprehensive explanation of the MCP HexLayer Architecture, please refer to the [MCP Python SDK repository](https://github.com/modelcontextprotocol/python-sdk).
+For a comprehensive explanation of the MCP HexLayer Architecture, please refer to the [MCP Python SDK repository](https://github.com/danielremoquillo/perch-mcp-hex-layer-architecture).
 
 ---
 
@@ -275,9 +275,13 @@ my-mcp-server/
 
 ### Installation
 
-add git clone then cd or etc.
-
 To set up Perch for local development:
+
+```bash
+git https://github.com/danielremoquillo/perch-py.git
+```
+
+Go to the directory then
 
 ```bash
 uv pip install -e .
